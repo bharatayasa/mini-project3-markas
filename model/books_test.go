@@ -13,24 +13,26 @@ import (
 func Init() {
 	err := godotenv.Load("../.env")
 	if err != nil {
-		fmt.Println(".env not found")
+		fmt.Println("error, env not found")
 	}
 
 	config.OpenDb()
 }
 
-func TestCreateSuccess(test *testing.T) {
+func TestCreateBook(test *testing.T) {
 	Init()
 
 	bookData := model.Books{
-		ISBN:    "Kanginkauh221",
+		ISBN:    "1231231234",
 		Penulis: "Bharata",
 		Tahun:   2021,
-		Judul:   "aku menyukai orang yang bahkah dia tidak tahu namaku",
-		Gambar:  "../UpGambar/Mangrove4.jpeg",
+		Judul:   "Aku Menyukai Orang yang Bahkan Dia Tidak Tahu Namaku",
+		Gambar:  "hahah",
 		Stok:    2000,
 	}
 
-	err := bookData.Create(config.Mysql.DB)
+	err := bookData.CreateBook(config.Mysql.DB)
 	assert.Nil(test, err)
+
+	println("id data baru: ", bookData.ID)
 }
