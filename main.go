@@ -3,14 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/bharatayasa/mini-project3-markas/config"
+	"github.com/bharatayasa/mini-project3-markas/controller/create"
+	uploadfile "github.com/bharatayasa/mini-project3-markas/controller/uploadFile"
 	"github.com/bharatayasa/mini-project3-markas/model"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
@@ -46,7 +45,7 @@ func TambahBuku(db *gorm.DB) {
 	book.Judul = strings.TrimSpace(book.Judul)
 
 	fmt.Print("Masukkan Gambar buku: ")
-	fileName, err := UploadFile()
+	fileName, err := uploadfile.UploadFile()
 	if err != nil {
 		log.Fatalf("Error uploading file: %v", err)
 	}
@@ -58,7 +57,7 @@ func TambahBuku(db *gorm.DB) {
 		log.Fatalf("Error parsing input: %v", err)
 	}
 
-	err = CreateNewBook(&book, db)
+	err = create.CreateNewBook(&book, db)
 	if err != nil {
 		log.Fatalf("Error adding book: %v", err)
 	}
@@ -66,72 +65,97 @@ func TambahBuku(db *gorm.DB) {
 	fmt.Println("Buku berhasil ditambahkan!")
 }
 
-func CreateNewBook(book *model.Books, db *gorm.DB) error {
-	err := book.CreateBook(db)
-	if err != nil {
-		return err
+func TampilBuku(db *gorm.DB) {
+	var books []model.Books
+	db.Find(&books)
+
+	if len(books) == 0 {
+		fmt.Println("Tidak ada buku yang tersedia")
+		return
 	}
 
-	return nil
+	fmt.Println("Daftar buku:")
+	fmt.Println("==================")
+	for _, book := range books {
+		fmt.Printf("ISBN: %s\n", book.ISBN)
+		fmt.Printf("Penulis: %s\n", book.Penulis)
+		fmt.Printf("Tahun Terbit: %d\n", book.Tahun)
+		fmt.Printf("Judul: %s\n", book.Judul)
+		fmt.Printf("Gambar: %s\n", book.Gambar)
+		fmt.Printf("Stok: %d\n\n", book.Stok)
+	}
 }
 
-func UploadFile() (string, error) {
+func EditBook(db *gorm.DB) {
+	var book model.Books
+
+	fmt.Print("Masukkan ID buku yang ingin diedit: ")
+	_, err := fmt.Scanln(&book.Model.ID)
+	if err != nil {
+		log.Fatalf("Error parsing input: %v", err)
+	}
+
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Masukkan path file gambar: ")
-	path, err := reader.ReadString('\n')
+
+	fmt.Print("Masukkan ISBN buku: ")
+	book.ISBN, _ = reader.ReadString('\n')
+	book.ISBN = strings.TrimSpace(book.ISBN)
+
+	fmt.Print("Masukkan Penulis buku: ")
+	book.Penulis, _ = reader.ReadString('\n')
+	book.Penulis = strings.TrimSpace(book.Penulis)
+
+	fmt.Print("Masukan Tahun terbit buku: ")
+	_, err = fmt.Scanln(&book.Tahun)
 	if err != nil {
-		return "", err
+		log.Fatalf("Error parsing input: %v", err)
 	}
-	path = strings.TrimSpace(path)
 
-	file, err := os.Open(path)
+	fmt.Print("Masukkan Judul buku: ")
+	book.Judul, _ = reader.ReadString('\n')
+	book.Judul = strings.TrimSpace(book.Judul)
+
+	fmt.Print("Masukkan Gambar buku: ")
+	fileName, err := uploadfile.UploadFile()
 	if err != nil {
-		return "", err
+		log.Fatalf("Error uploading file: %v", err)
 	}
-	defer file.Close()
+	book.Gambar = fileName
 
-	fileInfo, err := file.Stat()
+	fmt.Print("Masukkan Jumlah Stok buku: ")
+	_, err = fmt.Scanln(&book.Stok)
 	if err != nil {
-		return "", err
+		log.Fatalf("Error parsing input: %v", err)
 	}
 
-	fileBytes := make([]byte, fileInfo.Size())
-	_, err = file.Read(fileBytes)
+	err = book.UpdateOneByID(db)
 	if err != nil {
-		return "", err
+		log.Fatalf("Error editing book: %v", err)
 	}
 
-	fileType := http.DetectContentType(fileBytes)
-	if fileType != "image/jpeg" && fileType != "image/png" {
-		return "", fmt.Errorf("file format not supported")
-	}
-
-	fileName := filepath.Base(file.Name())
-
-	dst, err := os.Create("./images/" + fileName)
-	if err != nil {
-		return "", err
-	}
-	defer dst.Close()
-
-	_, err = io.Copy(dst, file)
-	if err != nil {
-		return "", err
-	}
-
-	return fileName, nil
-}
-
-func TampilBuku() {
-	fmt.Println("Tampil buku")
-}
-
-func EditBook() {
-	fmt.Println("edit buku")
+	fmt.Println("Buku berhasil diedit!")
 }
 
 func HapusBuku() {
-	fmt.Println("hapus buku")
+	var book model.Books
+
+	fmt.Print("Masukkan ID buku yang ingin dihapus: ")
+	_, err := fmt.Scanln(&book.Model.ID)
+	if err != nil {
+		log.Fatalf("Error parsing input: %v", err)
+	}
+
+	db, err := config.OpenDb()
+	if err != nil {
+		log.Fatalf("Error connecting to database: %v", err)
+	}
+
+	err = book.DeleteByID(db)
+	if err != nil {
+		log.Fatalf("Error deleting book: %v", err)
+	}
+
+	fmt.Println("Buku berhasil dihapus!")
 }
 
 func PrintOneBook() {
@@ -140,6 +164,10 @@ func PrintOneBook() {
 
 func PrintAllBooks() {
 	fmt.Println("print all book")
+}
+
+func ImportCsv() {
+	fmt.Println("import CSV")
 }
 
 func main() {
@@ -158,7 +186,8 @@ func main() {
 		fmt.Println("3. Edit Buku")
 		fmt.Println("4. Hapus Buku")
 		fmt.Println("5. Print Buku")
-		fmt.Println("6. Keluar")
+		fmt.Println("6. import CSV file")
+		fmt.Println("7. Keluar")
 		fmt.Println("---------------------------------------------")
 
 		var choice int
@@ -169,14 +198,16 @@ func main() {
 		case 1:
 			TambahBuku(db)
 		case 2:
-			TampilBuku()
+			TampilBuku(db)
 		case 3:
-			EditBook()
+			EditBook(db)
 		case 4:
 			HapusBuku()
 		case 5:
 			PrintOneBook()
 		case 6:
+			ImportCsv()
+		case 7:
 			fmt.Println("Terima kasih telah menggunakan program ini.")
 			os.Exit(0)
 			return
