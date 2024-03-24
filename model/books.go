@@ -22,3 +22,61 @@ func (book *Books) CreateBook(db *gorm.DB) error {
 
 	return nil
 }
+
+func (book *Books) GetBookById(db *gorm.DB) (Books, error) {
+	res := Books{}
+
+	err := db.Model(Books{}).Where("id = ?", book.Model.ID).Take(&res).Error
+	if err != nil {
+		return Books{}, err
+	}
+
+	return res, nil
+}
+
+func (book *Books) GetAllBooks(db *gorm.DB) ([]Books, error) {
+	var books []Books
+
+	err := db.Find(&books).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return books, nil
+}
+
+func (book *Books) UpdateOneByID(db *gorm.DB) error {
+	err := db.
+		Model(Books{}).
+		Select("isbn", "penulis", "tahun", "judul", "gambar", "stok").
+		Where("id = ?", book.Model.ID).
+		Updates(map[string]any{
+			"isbn":    book.ISBN,
+			"penulis": book.Penulis,
+			"tahun":   book.Tahun,
+			"judul":   book.Judul,
+			"gambar":  book.Gambar,
+			"stok":    book.Stok,
+		}).
+		Error
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (book *Books) DeleteByID(db *gorm.DB) error {
+	err := db.
+		Model(Books{}).
+		Where("id = ?", book.Model.ID).
+		Delete(&book).
+		Error
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

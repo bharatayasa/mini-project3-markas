@@ -33,6 +33,64 @@ func TestCreateBook(test *testing.T) {
 
 	err := bookData.CreateBook(config.Mysql.DB)
 	assert.Nil(test, err)
+}
 
-	println("id data baru: ", bookData.ID)
+func TestGetBookById(test *testing.T) {
+	Init()
+
+	bookData := model.Books{
+		Model: model.Model{
+			ID: 7,
+		},
+	}
+
+	data, err := bookData.GetBookById(config.Mysql.DB)
+	assert.Nil(test, err)
+	assert.NotNil(test, data)
+
+	fmt.Println(data)
+}
+
+func TestGetAllBooks(test *testing.T) {
+	Init()
+
+	bookData := model.Books{}
+
+	data, err := bookData.GetAllBooks(config.Mysql.DB)
+	assert.Nil(test, err)
+	assert.NotNil(test, data)
+
+	fmt.Println(data)
+}
+
+func TestUpdateBookByID(test *testing.T) {
+	Init()
+
+	bookData := model.Books{
+		Model: model.Model{
+			ID: 4,
+		},
+		ISBN:    "1231231234",
+		Penulis: "Bharata ubah",
+		Tahun:   2024,
+		Judul:   "heheeh ubah",
+		Gambar:  "hoho ubah",
+		Stok:    2000,
+	}
+
+	err := bookData.UpdateOneByID(config.Mysql.DB)
+	assert.Nil(test, err)
+}
+
+func TestDeleteByID(test *testing.T) {
+	Init()
+
+	bookData := model.Books{
+		Model: model.Model{
+			ID: 1,
+		},
+	}
+
+	err := bookData.DeleteByID(config.Mysql.DB)
+	assert.Nil(test, err)
 }
