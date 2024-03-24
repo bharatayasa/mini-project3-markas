@@ -26,7 +26,7 @@ func TestCreateBook(test *testing.T) {
 		ISBN:    "1231231234",
 		Penulis: "Bharata",
 		Tahun:   2021,
-		Judul:   "Aku Menyukai Orang yang Bahkan Dia Tidak Tahu Namaku",
+		Judul:   "hahah",
 		Gambar:  "hahah",
 		Stok:    2000,
 	}

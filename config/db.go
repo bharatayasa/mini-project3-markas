@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/bharatayasa/mini-project3-markas/model"
@@ -16,7 +15,7 @@ type MysqlDB struct {
 
 var Mysql MysqlDB
 
-func OpenDb() {
+func OpenDb() (*gorm.DB, error) {
 	connString := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		os.Getenv("DB_USER"),
@@ -28,7 +27,7 @@ func OpenDb() {
 
 	mysqlconn, err := gorm.Open(mysql.Open(connString), &gorm.Config{})
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	Mysql = MysqlDB{
@@ -37,8 +36,10 @@ func OpenDb() {
 
 	err = autoMigrate(mysqlconn)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
+
+	return mysqlconn, nil
 }
 
 func autoMigrate(db *gorm.DB) error {
