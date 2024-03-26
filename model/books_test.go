@@ -94,3 +94,10 @@ func TestDeleteByID(test *testing.T) {
 	err := bookData.DeleteByID(config.Mysql.DB)
 	assert.Nil(test, err)
 }
+
+func TestInsertCsv(test *testing.T) {
+	Init()
+
+	err := model.InsertCsvFromFile(config.Mysql.DB, "/Users/bharata/Desktop/markas/miniProject/mini-project3-markas/sample_books.csv")
+	assert.Nil(test, err)
+}

@@ -1,6 +1,12 @@
 package model
 
 import (
+	"encoding/csv"
+	"errors"
+	"io"
+	"os"
+	"strconv"
+
 	"gorm.io/gorm"
 )
 
@@ -80,3 +86,104 @@ func (book *Books) DeleteByID(db *gorm.DB) error {
 
 	return nil
 }
+
+// InsertCsvFromFile import data from csv file to database
+func InsertCsvFromFile(db *gorm.DB, filePath string) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	reader.Comma = ';'
+	reader.LazyQuotes = true
+
+	for {
+		line, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		if len(line) < 6 {
+			return errors.New("invalid CSV format: insufficient fields")
+		}
+
+		stok, err := strconv.ParseUint(line[5], 10, 32)
+		if err != nil {
+			return err
+		}
+
+		year, err := strconv.ParseUint(line[2], 10, 32)
+		if err != nil {
+			return err
+		}
+
+		book := Books{
+			ISBN:    line[0],
+			Penulis: line[1],
+			Tahun:   uint(year),
+			Judul:   line[3],
+			Gambar:  line[4],
+			Stok:    uint(stok),
+		}
+
+		err = db.Create(&book).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// func InsertCsvFromFile(db *gorm.DB, filePath string) error {
+// 	file, err := os.Open(filePath)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer file.Close()
+
+// 	reader := csv.NewReader(file)
+// 	reader.Comma = ';'
+// 	reader.LazyQuotes = true
+
+// 	for {
+// 		line, err := reader.Read()
+// 		if err == io.EOF {
+// 			break
+// 		}
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 		stok, err := strconv.ParseUint(line[5], 10, 32)
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 		year, err := strconv.ParseUint(line[2], 10, 32)
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 		book := Books{
+// 			ISBN:    line[0],
+// 			Penulis: line[1],
+// 			Tahun:   uint(year),
+// 			Judul:   line[3],
+// 			Gambar:  line[4],
+// 			Stok:    uint(stok),
+// 		}
+
+// 		err = db.Create(&book).Error
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+
+// 	return nil
+// }

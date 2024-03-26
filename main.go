@@ -77,6 +77,7 @@ func TampilBuku(db *gorm.DB) {
 	fmt.Println("Daftar buku:")
 	fmt.Println("==================")
 	for _, book := range books {
+		fmt.Printf("ID: %d\n", book.ID)
 		fmt.Printf("ISBN: %s\n", book.ISBN)
 		fmt.Printf("Penulis: %s\n", book.Penulis)
 		fmt.Printf("Tahun Terbit: %d\n", book.Tahun)
@@ -97,32 +98,32 @@ func EditBook(db *gorm.DB) {
 
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Print("Masukkan ISBN buku: ")
+	fmt.Print("Masukkan ISBN baru: ")
 	book.ISBN, _ = reader.ReadString('\n')
 	book.ISBN = strings.TrimSpace(book.ISBN)
 
-	fmt.Print("Masukkan Penulis buku: ")
+	fmt.Print("Masukkan penulis baru: ")
 	book.Penulis, _ = reader.ReadString('\n')
 	book.Penulis = strings.TrimSpace(book.Penulis)
 
-	fmt.Print("Masukan Tahun terbit buku: ")
+	fmt.Print("Masukan Tahun terbit baru: ")
 	_, err = fmt.Scanln(&book.Tahun)
 	if err != nil {
 		log.Fatalf("Error parsing input: %v", err)
 	}
 
-	fmt.Print("Masukkan Judul buku: ")
+	fmt.Print("Masukkan Judul baru: ")
 	book.Judul, _ = reader.ReadString('\n')
 	book.Judul = strings.TrimSpace(book.Judul)
 
-	fmt.Print("Masukkan Gambar buku: ")
+	fmt.Print("Masukkan Gambar baru: ")
 	fileName, err := uploadfile.UploadFile()
 	if err != nil {
 		log.Fatalf("Error uploading file: %v", err)
 	}
 	book.Gambar = fileName
 
-	fmt.Print("Masukkan Jumlah Stok buku: ")
+	fmt.Print("Masukkan Jumlah Stok baru: ")
 	_, err = fmt.Scanln(&book.Stok)
 	if err != nil {
 		log.Fatalf("Error parsing input: %v", err)
@@ -166,8 +167,8 @@ func PrintAllBooks() {
 	fmt.Println("print all book")
 }
 
-func ImportCsv() {
-	fmt.Println("import CSV")
+func ImportCsv(db *gorm.DB) {
+	fmt.Println("insert csv file")
 }
 
 func main() {
@@ -191,7 +192,7 @@ func main() {
 		fmt.Println("---------------------------------------------")
 
 		var choice int
-		fmt.Print("Pilih menu: ")
+		fmt.Print("Pilih menu opsi: ")
 		fmt.Scanln(&choice)
 
 		switch choice {
@@ -206,7 +207,7 @@ func main() {
 		case 5:
 			PrintOneBook()
 		case 6:
-			ImportCsv()
+			ImportCsv(db)
 		case 7:
 			fmt.Println("Terima kasih telah menggunakan program ini.")
 			os.Exit(0)
