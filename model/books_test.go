@@ -149,3 +149,12 @@ func TestInsertCsv(test *testing.T) {
 	err := model.InsertCsvFromFile(config.Mysql.DB, "/Users/bharata/Desktop/markas/miniProject/mini-project3-markas/sample_books.csv")
 	assert.Nil(test, err)
 }
+
+func TestAll(test *testing.T) {
+	Init()
+	TestCreateBook(test)
+	TestGetBookById(test)
+	TestGetAllBooks(test)
+	TestGetAllBooks(test)
+	TestDeleteByID(test)
+}
