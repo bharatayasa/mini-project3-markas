@@ -39,12 +39,24 @@ func TestGetBookById(test *testing.T) {
 	Init()
 
 	bookData := model.Books{
+		ISBN:    "1231231234",
+		Penulis: "Bharata",
+		Tahun:   2021,
+		Judul:   "hahah",
+		Gambar:  "hahah",
+		Stok:    2000,
+	}
+
+	err := bookData.CreateBook(config.Mysql.DB)
+	assert.Nil(test, err)
+
+	GetBookById := model.Books{
 		Model: model.Model{
-			ID: 7,
+			ID: bookData.ID,
 		},
 	}
 
-	data, err := bookData.GetBookById(config.Mysql.DB)
+	data, err := GetBookById.GetBookById(config.Mysql.DB)
 	assert.Nil(test, err)
 	assert.NotNil(test, data)
 
@@ -54,7 +66,19 @@ func TestGetBookById(test *testing.T) {
 func TestGetAllBooks(test *testing.T) {
 	Init()
 
-	bookData := model.Books{}
+	bookData := model.Books{
+		ISBN:    "1231231234",
+		Penulis: "Bharata",
+		Tahun:   2021,
+		Judul:   "hahah",
+		Gambar:  "hahah",
+		Stok:    2000,
+	}
+
+	err := bookData.CreateBook(config.Mysql.DB)
+	assert.Nil(test, err)
+
+	bookData = model.Books{}
 
 	data, err := bookData.GetAllBooks(config.Mysql.DB)
 	assert.Nil(test, err)
@@ -67,8 +91,20 @@ func TestUpdateBookByID(test *testing.T) {
 	Init()
 
 	bookData := model.Books{
+		ISBN:    "1231231234",
+		Penulis: "Bharata",
+		Tahun:   2021,
+		Judul:   "hahah",
+		Gambar:  "hahah",
+		Stok:    2000,
+	}
+
+	err := bookData.CreateBook(config.Mysql.DB)
+	assert.Nil(test, err)
+
+	bookDataUpdate := model.Books{
 		Model: model.Model{
-			ID: 4,
+			ID: bookData.ID,
 		},
 		ISBN:    "1231231234",
 		Penulis: "Bharata ubah",
@@ -78,7 +114,7 @@ func TestUpdateBookByID(test *testing.T) {
 		Stok:    2000,
 	}
 
-	err := bookData.UpdateOneByID(config.Mysql.DB)
+	err = bookDataUpdate.UpdateOneByID(config.Mysql.DB)
 	assert.Nil(test, err)
 }
 
@@ -86,12 +122,24 @@ func TestDeleteByID(test *testing.T) {
 	Init()
 
 	bookData := model.Books{
+		ISBN:    "1231231234",
+		Penulis: "Bharata",
+		Tahun:   2021,
+		Judul:   "hahah",
+		Gambar:  "hahah",
+		Stok:    2000,
+	}
+
+	err := bookData.CreateBook(config.Mysql.DB)
+	assert.Nil(test, err)
+
+	DeleteByID := model.Books{
 		Model: model.Model{
-			ID: 1,
+			ID: bookData.ID,
 		},
 	}
 
-	err := bookData.DeleteByID(config.Mysql.DB)
+	err = DeleteByID.DeleteByID(config.Mysql.DB)
 	assert.Nil(test, err)
 }
 

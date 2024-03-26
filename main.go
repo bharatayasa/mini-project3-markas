@@ -186,9 +186,8 @@ func main() {
 		fmt.Println("2. Tampil Buku")
 		fmt.Println("3. Edit Buku")
 		fmt.Println("4. Hapus Buku")
-		fmt.Println("5. Print Buku")
-		fmt.Println("6. import CSV file")
-		fmt.Println("7. Keluar")
+		fmt.Println("5. import CSV file")
+		fmt.Println("6. Keluar")
 		fmt.Println("---------------------------------------------")
 
 		var choice int
@@ -205,10 +204,8 @@ func main() {
 		case 4:
 			HapusBuku()
 		case 5:
-			PrintOneBook()
-		case 6:
 			ImportCsv(db)
-		case 7:
+		case 6:
 			fmt.Println("Terima kasih telah menggunakan program ini.")
 			os.Exit(0)
 			return
