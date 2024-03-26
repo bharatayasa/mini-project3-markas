@@ -28,10 +28,6 @@ func TestAll(test *testing.T) {
 	TestDeleteByID(test)
 }
 
-func TestImportDataFromCSV(t *testing.T) {
-	Init()
-}
-
 func TestCreateBook(test *testing.T) {
 	Init()
 

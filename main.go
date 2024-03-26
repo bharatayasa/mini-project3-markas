@@ -2,10 +2,13 @@ package main
 
 import (
 	"bufio"
+	"encoding/csv"
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/bharatayasa/mini-project3-markas/config"
 	"github.com/bharatayasa/mini-project3-markas/controller/create"
@@ -159,8 +162,162 @@ func HapusBuku() {
 	fmt.Println("Buku berhasil dihapus!")
 }
 
-func ImportCsv(db *gorm.DB) {
-	fmt.Println("insert csv file")
+func ImportCsv() {
+	var direktori string
+
+	fmt.Println("===========================================")
+	fmt.Println("Import Data Buku dari File CSV")
+	fmt.Println("===========================================")
+
+	fmt.Print("Silahkan Masukkan Path atau Lokasi File CSV : ")
+	_, err := fmt.Scanln(&direktori)
+	if err != nil {
+		fmt.Println("Terjadi Error : ", err)
+	}
+
+	file, err := openFile(direktori)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer file.Close()
+
+	csvChan, err := loadFile(file)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	jmlGoroutine := 5
+
+	var bookChanTemp []<-chan model.Books
+
+	for i := 0; i < jmlGoroutine; i++ {
+		bookChanTemp = append(bookChanTemp, processConverStruct(csvChan))
+	}
+
+	mergeCh := appendBooks(bookChanTemp...)
+
+	var books []model.Books
+
+	for ch := range mergeCh {
+		books = append(books, ch)
+	}
+
+	ch := make(chan model.Books)
+	wg := sync.WaitGroup{}
+
+	for i := 0; i < jmlGoroutine; i++ {
+		wg.Add(1)
+		go simpanImportBuku(ch, &wg)
+	}
+
+	for _, book := range books {
+		ch <- book
+	}
+
+	close(ch)
+	wg.Wait()
+
+	fmt.Println("Import Data Selesai!")
+
+}
+
+func openFile(path string) (*os.File, error) {
+	return os.Open(path)
+}
+
+func loadFile(file *os.File) (<-chan []string, error) {
+	bookChan := make(chan []string)
+	reader := csv.NewReader(file)
+
+	records, err := reader.ReadAll()
+	if err != nil {
+		return bookChan, err
+	}
+
+	go func() {
+		for i, book := range records {
+			if i == 0 {
+				continue
+			}
+			bookChan <- book
+		}
+
+		close(bookChan)
+	}()
+
+	return bookChan, nil
+}
+
+func processConverStruct(csvChan <-chan []string) <-chan model.Books {
+	booksChan := make(chan model.Books)
+
+	go func() {
+		for book := range csvChan {
+			id, err := strconv.ParseUint(book[0], 10, 64)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			tahun, err := strconv.ParseUint(book[3], 10, 64)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			stok, err := strconv.ParseUint(book[6], 10, 64)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			booksChan <- model.Books{
+				ID:      uint(id),
+				ISBN:    book[1],
+				Penulis: book[2],
+				Tahun:   uint(tahun),
+				Judul:   book[4],
+				Gambar:  book[5],
+				Stok:    uint(stok),
+			}
+		}
+
+		close(booksChan)
+	}()
+
+	return booksChan
+}
+
+func appendBooks(bookChanMany ...<-chan model.Books) <-chan model.Books {
+	wg := sync.WaitGroup{}
+
+	mergedChan := make(chan model.Books)
+
+	wg.Add(len(bookChanMany))
+	for _, ch := range bookChanMany {
+		go func(ch <-chan model.Books) {
+			for books := range ch {
+				mergedChan <- books
+			}
+			wg.Done()
+		}(ch)
+	}
+
+	go func() {
+		wg.Wait()
+		close(mergedChan)
+	}()
+
+	return mergedChan
+}
+
+func simpanImportBuku(ch <-chan model.Books, wg *sync.WaitGroup) {
+	for model := range ch {
+		err := model.ImportCsv(config.Mysql.DB)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	wg.Done()
 }
 
 func main() {
@@ -196,7 +353,7 @@ func main() {
 		case 4:
 			HapusBuku()
 		case 5:
-			ImportCsv(db)
+			ImportCsv()
 		case 6:
 			fmt.Println("Terima kasih telah menggunakan program ini.")
 			os.Exit(0)

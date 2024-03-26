@@ -1,17 +1,16 @@
 package model
 
 import (
-	"encoding/csv"
-	"fmt"
-	"io"
-	"os"
-	"strconv"
-
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Books struct {
 	Model
+	ID uint `gorm:"primarykey" json:"id"`
+	// CreatedAt time.Time      `json:"created_at"`
+	// UpdatedAt time.Time      `json:"updated_at"`
+	// DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
 	ISBN    string `gorm:"not null" json:"isbn"`
 	Penulis string `gorm:"not null" json:"penulis"`
 	Tahun   uint   `gorm:"not null" json:"tahun"`
@@ -20,52 +19,16 @@ type Books struct {
 	Stok    uint   `gorm:"not null" json:"stok"`
 }
 
-func ImportDataFromCSV(filePath string, db *gorm.DB) error {
-	file, err := os.Open(filePath)
+func (book *Books) ImportCsv(db *gorm.DB) error {
+	err := db.
+		Model(Books{}).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"isbn", "penulis", "tahun", "judul", "gambar", "stok"}),
+		}).Create(&book).
+		Error
 	if err != nil {
-		return fmt.Errorf("error opening file: %v", err)
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-
-	for {
-		record, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return fmt.Errorf("error reading CSV: %v", err)
-		}
-
-		tahunStr := record[2]
-		tahun, err := strconv.ParseUint(tahunStr, 10, 64)
-		if err != nil {
-			return err
-		}
-
-		stok, err := strconv.ParseUint(tahunStr, 10, 64)
-		if err != nil {
-			return fmt.Errorf("error parsing stok: %v", err)
-		}
-
-		book := &Books{
-			ISBN:    record[0],
-			Penulis: record[1],
-			Tahun:   uint(tahun),
-			Judul:   record[3],
-			Gambar:  record[4],
-			Stok:    uint(stok),
-		}
-
-		var existingBook Books
-		result := db.First(&existingBook, "isbn = ?", book.ISBN)
-		if result.RowsAffected > 0 {
-			book.ID = existingBook.ID
-			db.Save(book)
-		} else {
-			db.Create(book)
-		}
+		return err
 	}
 
 	return nil
