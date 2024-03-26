@@ -19,6 +19,15 @@ func Init() {
 	config.OpenDb()
 }
 
+func TestAll(test *testing.T) {
+	Init()
+	TestCreateBook(test)
+	TestGetBookById(test)
+	TestGetAllBooks(test)
+	TestUpdateBookByID(test)
+	TestDeleteByID(test)
+}
+
 func TestImportDataFromCSV(t *testing.T) {
 	Init()
 }
@@ -145,13 +154,4 @@ func TestDeleteByID(test *testing.T) {
 
 	err = DeleteByID.DeleteByID(config.Mysql.DB)
 	assert.Nil(test, err)
-}
-
-func TestAll(test *testing.T) {
-	Init()
-	TestCreateBook(test)
-	TestGetBookById(test)
-	TestGetAllBooks(test)
-	TestUpdateBookByID(test)
-	TestDeleteByID(test)
 }
