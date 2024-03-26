@@ -219,7 +219,6 @@ func ImportCsv() {
 	wg.Wait()
 
 	fmt.Println("Import Data Selesai!")
-
 }
 
 func openFile(path string) (*os.File, error) {
