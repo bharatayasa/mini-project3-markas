@@ -47,7 +47,7 @@ func TambahBuku(db *gorm.DB) {
 	book.Judul, _ = reader.ReadString('\n')
 	book.Judul = strings.TrimSpace(book.Judul)
 
-	fmt.Print("Masukkan Gambar buku: ")
+	fmt.Print("Drag & drop file gambar disini: ")
 	fileName, err := uploadfile.UploadFile()
 	if err != nil {
 		log.Fatalf("Error uploading file: %v", err)
@@ -119,7 +119,7 @@ func EditBook(db *gorm.DB) {
 	book.Judul, _ = reader.ReadString('\n')
 	book.Judul = strings.TrimSpace(book.Judul)
 
-	fmt.Print("Masukkan Gambar baru: ")
+	fmt.Print("Drag & drop file gambar disini: ")
 	fileName, err := uploadfile.UploadFile()
 	if err != nil {
 		log.Fatalf("Error uploading file: %v", err)
@@ -165,11 +165,9 @@ func HapusBuku() {
 func ImportCsv() {
 	var direktori string
 
-	fmt.Println("===========================================")
 	fmt.Println("Import Data Buku dari File CSV")
-	fmt.Println("===========================================")
 
-	fmt.Print("Silahkan Masukkan Path atau Lokasi File CSV : ")
+	fmt.Print("drag & drop file .csv disini: ")
 	_, err := fmt.Scanln(&direktori)
 	if err != nil {
 		fmt.Println("Terjadi Error : ", err)
