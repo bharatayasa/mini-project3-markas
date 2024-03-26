@@ -19,6 +19,10 @@ func Init() {
 	config.OpenDb()
 }
 
+func TestImportDataFromCSV(t *testing.T) {
+	Init()
+}
+
 func TestCreateBook(test *testing.T) {
 	Init()
 
@@ -143,18 +147,11 @@ func TestDeleteByID(test *testing.T) {
 	assert.Nil(test, err)
 }
 
-func TestInsertCsv(test *testing.T) {
-	Init()
-
-	err := model.InsertCsvFromFile(config.Mysql.DB, "/Users/bharata/Desktop/markas/miniProject/mini-project3-markas/sample_books.csv")
-	assert.Nil(test, err)
-}
-
 func TestAll(test *testing.T) {
 	Init()
 	TestCreateBook(test)
 	TestGetBookById(test)
 	TestGetAllBooks(test)
-	TestGetAllBooks(test)
+	TestUpdateBookByID(test)
 	TestDeleteByID(test)
 }

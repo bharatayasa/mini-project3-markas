@@ -2,7 +2,7 @@ package model
 
 import (
 	"encoding/csv"
-	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -18,6 +18,57 @@ type Books struct {
 	Judul   string `gorm:"not null" json:"judul"`
 	Gambar  string `gorm:"not null" json:"gambar"`
 	Stok    uint   `gorm:"not null" json:"stok"`
+}
+
+func ImportDataFromCSV(filePath string, db *gorm.DB) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("error opening file: %v", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("error reading CSV: %v", err)
+		}
+
+		tahunStr := record[2]
+		tahun, err := strconv.ParseUint(tahunStr, 10, 64)
+		if err != nil {
+			return err
+		}
+
+		stok, err := strconv.ParseUint(tahunStr, 10, 64)
+		if err != nil {
+			return fmt.Errorf("error parsing stok: %v", err)
+		}
+
+		book := &Books{
+			ISBN:    record[0],
+			Penulis: record[1],
+			Tahun:   uint(tahun),
+			Judul:   record[3],
+			Gambar:  record[4],
+			Stok:    uint(stok),
+		}
+
+		var existingBook Books
+		result := db.First(&existingBook, "isbn = ?", book.ISBN)
+		if result.RowsAffected > 0 {
+			book.ID = existingBook.ID
+			db.Save(book)
+		} else {
+			db.Create(book)
+		}
+	}
+
+	return nil
 }
 
 func (book *Books) CreateBook(db *gorm.DB) error {
@@ -86,104 +137,3 @@ func (book *Books) DeleteByID(db *gorm.DB) error {
 
 	return nil
 }
-
-// InsertCsvFromFile import data from csv file to database
-func InsertCsvFromFile(db *gorm.DB, filePath string) error {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	reader.Comma = ';'
-	reader.LazyQuotes = true
-
-	for {
-		line, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
-		if len(line) < 6 {
-			return errors.New("invalid CSV format: insufficient fields")
-		}
-
-		stok, err := strconv.ParseUint(line[5], 10, 32)
-		if err != nil {
-			return err
-		}
-
-		year, err := strconv.ParseUint(line[2], 10, 32)
-		if err != nil {
-			return err
-		}
-
-		book := Books{
-			ISBN:    line[0],
-			Penulis: line[1],
-			Tahun:   uint(year),
-			Judul:   line[3],
-			Gambar:  line[4],
-			Stok:    uint(stok),
-		}
-
-		err = db.Create(&book).Error
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// func InsertCsvFromFile(db *gorm.DB, filePath string) error {
-// 	file, err := os.Open(filePath)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer file.Close()
-
-// 	reader := csv.NewReader(file)
-// 	reader.Comma = ';'
-// 	reader.LazyQuotes = true
-
-// 	for {
-// 		line, err := reader.Read()
-// 		if err == io.EOF {
-// 			break
-// 		}
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		stok, err := strconv.ParseUint(line[5], 10, 32)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		year, err := strconv.ParseUint(line[2], 10, 32)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		book := Books{
-// 			ISBN:    line[0],
-// 			Penulis: line[1],
-// 			Tahun:   uint(year),
-// 			Judul:   line[3],
-// 			Gambar:  line[4],
-// 			Stok:    uint(stok),
-// 		}
-
-// 		err = db.Create(&book).Error
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	return nil
-// }
