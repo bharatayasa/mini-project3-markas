@@ -159,14 +159,6 @@ func HapusBuku() {
 	fmt.Println("Buku berhasil dihapus!")
 }
 
-func PrintOneBook() {
-	fmt.Println("print one book")
-}
-
-func PrintAllBooks() {
-	fmt.Println("print all book")
-}
-
 func ImportCsv(db *gorm.DB) {
 	fmt.Println("insert csv file")
 }
